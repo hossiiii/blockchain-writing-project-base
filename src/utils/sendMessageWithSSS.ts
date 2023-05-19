@@ -13,6 +13,7 @@ import { firstValueFrom } from 'rxjs';
 import { connectNode } from '@/utils/connectNode';
 import { nodeList } from '@/consts/nodeList';
 import axios from 'axios';
+import { epochAdjustment, networkType } from '@/consts/blockchainProperty';
 
 //SSS用設定
 interface SSSWindow extends Window {
@@ -32,10 +33,6 @@ export const sendMessageWithSSS = async (
   const txRepo = repo.createTransactionRepository();
   const tsRepo = repo.createTransactionStatusRepository();
   const listener = repo.createListener();
-
-  const epochAdjustment = await firstValueFrom(repo.getEpochAdjustment());
-  const generationHash = await firstValueFrom(repo.getGenerationHash());
-  const networkType = await firstValueFrom(repo.getNetworkType());
 
   const clientAddressAccount = Address.createFromRawAddress(clientAddress);
 

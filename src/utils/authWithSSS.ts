@@ -4,6 +4,8 @@ import {
   Deadline,
   PlainMessage,
   RepositoryFactoryHttp,
+  SignedTransaction,
+  TransactionHttp,
   TransactionStatus,
   TransferTransaction,
 } from 'symbol-sdk';
@@ -11,10 +13,16 @@ import { firstValueFrom } from 'rxjs';
 import { connectNode } from '@/utils/connectNode';
 import { nodeList } from '@/consts/nodeList';
 import axios from 'axios';
-import { epochAdjustment, generationHash, networkType } from '@/consts/blockchainProperty';
+import { epochAdjustment, networkType } from '@/consts/blockchainProperty';
 
-export const sendMessage = async (
-  clientPrivateKey: string,
+//SSS用設定
+interface SSSWindow extends Window {
+  SSS: any
+}
+declare const window: SSSWindow
+
+export const authWithSSS = async (
+  clientAddress: string,
 ): Promise<TransactionStatus | undefined> => {
   const NODE = await connectNode(nodeList);
   if (NODE === '') return undefined;
@@ -26,7 +34,7 @@ export const sendMessage = async (
   const tsRepo = repo.createTransactionStatusRepository();
   const listener = repo.createListener();
 
-  const client = Account.createFromPrivateKey(clientPrivateKey, networkType);
+  const clientAddressAccount = Address.createFromRawAddress(clientAddress);
 
   const res = await axios.get('/api/fetch-address');
   const adminAddress:string = res.data;
@@ -39,12 +47,15 @@ export const sendMessage = async (
     networkType
   ).setMaxFee(100);
 
-  const signedTx = client.sign(tx, generationHash);
+  window.SSS.setTransaction(tx)
+  const signedTx:SignedTransaction = await new Promise((resolve) => {
+    resolve(window.SSS.requestSign());
+  })
   await firstValueFrom(txRepo.announce(signedTx));
   await listener.open();
   const transactionStatus: TransactionStatus = await new Promise((resolve) => {
     //承認トランザクションの検知
-    listener.confirmed(client.address, signedTx.hash).subscribe(async (confirmedTx) => {
+    listener.confirmed(clientAddressAccount, signedTx.hash).subscribe(async (confirmedTx) => {
       const response = await firstValueFrom(tsRepo.getTransactionStatus(signedTx.hash));
       listener.close();
       resolve(response);
@@ -60,3 +71,5 @@ export const sendMessage = async (
   });
   return transactionStatus;
 };
+
+
