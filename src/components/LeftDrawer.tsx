@@ -150,21 +150,6 @@ function LeftDrawer(props: {
               </ListItemButton>
             </ListItem>
           </List>
-          <List>
-            <ListItem disablePadding>
-              <ListItemButton
-                onClick={() => {
-                  router.push('/page7');
-                  setOpenLeftDrawer(false);
-                }}
-              >
-                <ListItemIcon>
-                  <Looks6Icon />
-                </ListItemIcon>
-                <ListItemText primary={'SSSで認証'} />
-              </ListItemButton>
-            </ListItem>
-          </List>
         </Box>
       </Drawer>
     </>
